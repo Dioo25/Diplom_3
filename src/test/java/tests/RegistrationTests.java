@@ -1,50 +1,65 @@
 package tests;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import api.UserApiClient;
+import io.qameta.allure.Description;
+import io.qameta.allure.junit4.DisplayName;
+import org.junit.*;
+import org.openqa.selenium.WebDriver;
 import pageobjects.MainPage;
 import pageobjects.RegistrationPage;
 import utils.DriverFactory;
-import org.openqa.selenium.WebDriver;
-
-import static org.junit.Assert.assertTrue;
 
 public class RegistrationTests {
 
     private WebDriver driver;
     private RegistrationPage registrationPage;
     private MainPage mainPage;
+    private String token; // для удаления юзера
 
     @Before
     public void setUp() {
         driver = DriverFactory.create();
-        driver.get("https://stellarburgers.nomoreparties.site/");
         mainPage = new MainPage(driver);
-        mainPage.clickLoginAccountButton(); // переход к странице регистрации/логина
         registrationPage = new RegistrationPage(driver);
+        mainPage.open();
     }
 
     @After
     public void tearDown() {
+        if (token != null) {
+            UserApiClient.deleteUser(token);
+        }
         driver.quit();
     }
 
     @Test
-    public void registrationPositiveTest() {
-        registrationPage.setName("Иван");
-        registrationPage.setEmail("ivan@example.com");
-        registrationPage.setPassword("123456");
+    @DisplayName("Успешная регистрация пользователя")
+    @Description("Проверяем, что пользователь успешно регистрируется с валидными данными")
+    public void testSuccessfulRegistration() {
+        String email = UserApiClient.randomEmail();
+        String password = "password123";
+        String name = "TestUser";
+
+        driver.get("https://stellarburgers.education-services.ru/register");
+        registrationPage.setName(name);
+        registrationPage.setEmail(email);
+        registrationPage.setPassword(password);
         registrationPage.clickRegister();
-        assertTrue("Регистрация должна пройти успешно", registrationPage.isRegistrationSuccessful());
+
+        token = UserApiClient.loginUserAndGetToken(email, password);
+        Assert.assertNotNull("Пользователь не создался", token);
     }
 
     @Test
-    public void registrationWithShortPasswordTest() {
-        registrationPage.setName("Пётр");
-        registrationPage.setEmail("petr@example.com");
-        registrationPage.setPassword("123"); // короткий пароль
+    @DisplayName("Ошибка при регистрации с коротким паролем")
+    @Description("Проверяем, что появляется сообщение об ошибке при вводе пароля короче 6 символов")
+    public void testInvalidPasswordRegistration() {
+        driver.get("https://stellarburgers.education-services.ru/register");
+        registrationPage.setName("Test");
+        registrationPage.setEmail(UserApiClient.randomEmail());
+        registrationPage.setPassword("123");
         registrationPage.clickRegister();
-        assertTrue("Должно отображаться сообщение об ошибке", registrationPage.isErrorMessageDisplayed());
+
+        Assert.assertTrue("Ошибка пароля не отображается", registrationPage.isPasswordErrorVisible());
     }
 }

@@ -1,55 +1,61 @@
 package pageobjects;
 
-import io.qameta.allure.Step;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+
 import java.time.Duration;
 
 public class MainPage {
-    private final WebDriver driver;
-    private final WebDriverWait wait;
-    private final String baseUrl;
-    private final By loginButton = By.xpath("//*[contains(text(),'Войти в аккаунт')]");
-    private final By personalAccountLink = By.xpath("//a[contains(text(),'Личный кабинет')]");
-    private final By bunsTab = By.xpath("//*[contains(text(),'Булки')]");
-    private final By saucesTab = By.xpath("//*[contains(text(),'Соусы')]");
-    private final By fillingsTab = By.xpath("//*[contains(text(),'Начинки')]");
+    private WebDriver driver;
+    private WebDriverWait wait;
+
+    private final By loginButton = By.xpath("//button[text()='Войти в аккаунт']");
+    private final By personalAccountButton = By.xpath("//p[text()='Личный Кабинет']");
+    private final By bunsSection = By.xpath("//span[text()='Булки']");
+    private final By saucesSection = By.xpath("//span[text()='Соусы']");
+    private final By fillingsSection = By.xpath("//span[text()='Начинки']");
 
     public MainPage(WebDriver driver) {
         this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(12));
-        this.baseUrl = System.getProperty("baseUrl", "https://stellarburgers.nomoreparties.site");
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
     }
 
-    @Step("Open main page")
     public void open() {
-        driver.get(baseUrl);
+        driver.get("https://stellarburgers.education-services.ru/");
     }
 
-    @Step("Click 'Войти в аккаунт' on main")
-    public void clickLoginAccountButton() {
-        wait.until(ExpectedConditions.elementToBeClickable(loginButton)).click();
+    public void clickLoginButton() {
+        WebElement button = wait.until(ExpectedConditions.elementToBeClickable(loginButton));
+        scrollIntoView(button);
+        button.click();
     }
 
-    @Step("Click 'Личный кабинет' link")
     public void clickPersonalAccount() {
-        wait.until(ExpectedConditions.elementToBeClickable(personalAccountLink)).click();
+        WebElement button = wait.until(ExpectedConditions.elementToBeClickable(personalAccountButton));
+        scrollIntoView(button);
+        button.click();
     }
 
-    @Step("Click 'Булки' tab")
     public void clickBuns() {
-        wait.until(ExpectedConditions.elementToBeClickable(bunsTab)).click();
+        WebElement el = wait.until(ExpectedConditions.elementToBeClickable(bunsSection));
+        scrollIntoView(el);
+        el.click();
     }
 
-    @Step("Click 'Соусы' tab")
     public void clickSauces() {
-        wait.until(ExpectedConditions.elementToBeClickable(saucesTab)).click();
+        WebElement el = wait.until(ExpectedConditions.elementToBeClickable(saucesSection));
+        scrollIntoView(el);
+        el.click();
     }
 
-    @Step("Click 'Начинки' tab")
     public void clickFillings() {
-        wait.until(ExpectedConditions.elementToBeClickable(fillingsTab)).click();
+        WebElement el = wait.until(ExpectedConditions.elementToBeClickable(fillingsSection));
+        scrollIntoView(el);
+        el.click();
+    }
+
+    private void scrollIntoView(WebElement el) {
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", el);
     }
 }

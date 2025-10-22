@@ -1,38 +1,18 @@
-target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+# Игнорир по умолчанию
+/*
 
-### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
-*.iws
-*.iml
-*.ipr
+#  исходники, pom и readme
+!/src/
+!/pom.xml
+!/README.md
 
-### Eclipse ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+#  allure-отчёты
+!/target/
+!/target/site/
+!/target/site/allure/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
-.vscode/
-
-### Mac OS ###
-.DS_Store
+# Внутри target игнорир всё, кроме site/allure
+/target/*
+!/target/site/
+/target/site/*
+!/target/site/allure/

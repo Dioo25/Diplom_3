@@ -9,8 +9,6 @@
  Предварительные требования
 - Java 11+
 - Maven
-- Для Yandex Browser: путь к бинарнику браузера (см. ниже)
-
  Запуск тестов
 
  Запуск в Google Chrome (по умолчанию)
@@ -21,7 +19,7 @@ mvn clean test -Dbrowser=chrome
  Запуск в Yandex Browser
 
 bash
-mvn clean test -Dbrowser=yandex -Dyandex.binary="/usr/bin/yandex-browser"
+mvn clean test -Dbrowser=yandex 
 
 
 Аllure отчет
