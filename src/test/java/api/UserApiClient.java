@@ -1,37 +1,59 @@
 package api;
 
-import io.restassured.RestAssured;
+import io.qameta.allure.Step;
 import io.restassured.response.Response;
-import java.util.UUID;
 
-public class UserApiClient {
+import static io.restassured.RestAssured.given;
 
-    private static final String BASE_URL = "https://stellarburgers.education-services.ru";
+/**
+ * API-клиент для работы с пользователями.
+ * Использует RequestSpecification из BaseClient (getSpec()).
+ */
+public class UserApiClient extends BaseClient {
 
-    public static String randomEmail() {
-        return "user_" + UUID.randomUUID().toString().substring(0, 8) + "@test.ru";
+    @Step("Создать пользователя: {user.email}")
+    public Response createUser(api.User user) {
+        return given()
+                .spec(getSpec())
+                .body(user) // сериализация Jackson / Rest Assured
+                .when()
+                .post("/auth/register");
     }
 
-    public static Response createUser(String email, String password, String name) {
-        return RestAssured.given()
-                .header("Content-Type", "application/json")
-                .body("{\"email\":\"" + email + "\",\"password\":\"" + password + "\",\"name\":\"" + name + "\"}")
-                .post(BASE_URL + "/api/auth/register");
+    @Step("Логин пользователя: {email}")
+    public Response loginUser(String email, String password) {
+        var body = new LoginRequest(email, password);
+        return given()
+                .spec(getSpec())
+                .body(body)
+                .when()
+                .post("/auth/login");
     }
 
-    public static String loginUserAndGetToken(String email, String password) {
-        Response response = RestAssured.given()
-                .header("Content-Type", "application/json")
-                .body("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}")
-                .post(BASE_URL + "/api/auth/login");
-        return response.jsonPath().getString("accessToken");
+    @Step("Логин пользователя (используя модель User): {user.email}")
+    public Response loginUser(api.User user) {
+        var body = new LoginRequest(user.getEmail(), user.getPassword());
+        return given()
+                .spec(getSpec())
+                .body(body)
+                .when()
+                .post("/auth/login");
     }
 
-    public static void deleteUser(String token) {
-        if (token != null && !token.isEmpty()) {
-            RestAssured.given()
-                    .header("Authorization", token)
-                    .delete(BASE_URL + "/api/auth/user");
-        }
+    @Step("Удалить пользователя")
+    public Response deleteUser(String token) {
+        if (token == null) return null;
+        return given()
+                .spec(getSpec())
+                .header("Authorization", token)
+                .when()
+                .delete("/auth/user");
+    }
+
+    // Вспомогательный DTO для логина
+    private static class LoginRequest {
+        public String email;
+        public String password;
+        public LoginRequest(String email, String password) { this.email = email; this.password = password; }
     }
 }
