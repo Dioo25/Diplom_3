@@ -1,11 +1,42 @@
-package api.user;
+package api;
 
 /**
- * Адаптер-модель api.user.User, делегирует полям из api.User.
- * Нужен для обратной совместимости — если где-то импортируют api.user.User.
+ * Простейшая POJO-модель пользователя для сериализации в REST-assured.
  */
-public class User extends api.User {
-    public User() { super(); }
-    public User(String email, String password, String name) { super(email, password, name); }
-    public User(String email, String password) { super(email, password); }
+public class User {
+    private String email;
+    private String password;
+    private String name;
+
+    public User() {}
+
+    public User(String email, String password, String name) {
+        this.email = email;
+        this.password = password;
+        this.name = name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

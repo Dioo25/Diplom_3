@@ -5,47 +5,57 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 
+import java.time.Duration;
+
 public class DriverFactory {
 
     /**
-     * Совместимый метод create() — многие тесты ожидают именно его.
+     * Создание драйвера. По умолчанию — Chrome.
+     * Если задан system property "browser=yandex", запускается Яндекс.Браузер.
      */
     public static WebDriver create() {
-        String browser = System.getProperty("browser", "chrome");
-        return getDriver(browser);
-    }
-
-    /**
-     * Возвращает WebDriver по умолчанию. Удобно вызывать getDriver() напрямую.
-     */
-    public static WebDriver getDriver() {
-        String browser = System.getProperty("browser", "chrome");
-        return getDriver(browser);
-    }
-
-    /**
-     * Возвращает WebDriver для заданного браузера.
-     * Поддерживаем 'chrome' и 'yandex' (Yandex — ChromeDriver с бинарником Yandex).
-     */
-    public static WebDriver getDriver(String browser) {
-        String b = (browser == null) ? "chrome" : browser.toLowerCase();
+        String browser = System.getProperty("browser", "chrome").toLowerCase();
 
         WebDriverManager.chromedriver().setup();
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--start-maximized");
-        options.addArguments("--remote-allow-origins=*"); // для новых сборок Chrome
+        options.addArguments("--remote-allow-origins=*");
 
-        if ("yandex".equals(b)) {
+        if ("yandex".equals(browser)) {
+            // Указываем путь к бинарнику Яндекс.Браузера
             String yandexBinary = System.getenv("YANDEX_BIN");
             if (yandexBinary != null && !yandexBinary.isEmpty()) {
                 options.setBinary(yandexBinary);
             } else {
-                // запасной путь — можно изменить под систему
-                String user = System.getenv("USERNAME");
-                options.setBinary("C:\\Users\\" + user + "\\AppData\\Local\\Yandex\\YandexBrowser\\Application\\browser.exe");
+                options.setBinary("C:\\Users\\" + System.getenv("USERNAME")
+                        + "\\AppData\\Local\\Yandex\\YandexBrowser\\Application\\browser.exe");
             }
         }
 
-        return new ChromeDriver(options);
+        ChromeDriver driver = new ChromeDriver(options);
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(3));
+        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(30));
+        return driver;
+    }
+
+    /**
+     * Создание драйвера для указанного браузера.
+     * Временное изменение system property "browser".
+     */
+    public static WebDriver getDriver(String browser) {
+        if (browser == null || browser.isBlank()) {
+            return create();
+        }
+        String prev = System.getProperty("browser");
+        try {
+            System.setProperty("browser", browser.toLowerCase());
+            return create();
+        } finally {
+            if (prev != null) {
+                System.setProperty("browser", prev);
+            } else {
+                System.clearProperty("browser");
+            }
+        }
     }
 }

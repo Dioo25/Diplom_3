@@ -1,17 +1,13 @@
 package tests;
 
-import api.UserApiClient;
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.openqa.selenium.WebDriver;
 import pageobjects.LoginPage;
+import utils.DriverFactory;
 
-import static org.junit.Assert.assertTrue;
-
-@DisplayName("Тесты входа")
+@DisplayName("Тесты логина")
 public class LoginTests {
 
     private WebDriver driver;
@@ -19,29 +15,33 @@ public class LoginTests {
 
     @Before
     public void setUp() {
-        driver = DriverFactory.create();
+        driver = DriverFactory.getDriver(System.getProperty("browser", "chrome"));
+        driver.get("https://stellarburgers.education-services.ru/");
         loginPage = new LoginPage(driver);
-        driver.get("https://stellarburgers.education-services.ru/login");
     }
 
     @After
     public void tearDown() {
-        if (driver != null) driver.quit();
+        if (driver != null) {
+            driver.quit();
+        }
     }
 
     @Test
-    @DisplayName("Вход через кнопку 'Войти в аккаунт'")
-    @Description("Проверка входа на главной странице")
+    @DisplayName("Логин через кнопку 'Войти в аккаунт'")
+    @Description("Проверяем успешный вход через кнопку 'Войти в аккаунт'")
     public void testLoginMainButton() {
-        loginPage.login(UserApiClient.TEST_EMAIL, UserApiClient.TEST_PASSWORD);
-        assertTrue(loginPage.isLoggedIn());
+        loginPage.clickLoginToAccountButton();
+        loginPage.login("test@example.com", "123456");
+        Assert.assertTrue("Профиль не отобразился", loginPage.isProfileVisible());
     }
 
     @Test
-    @DisplayName("Вход через Личный кабинет")
-    @Description("Проверка входа через кнопку Личный кабинет")
+    @DisplayName("Логин через 'Личный кабинет'")
+    @Description("Проверяем успешный вход через кнопку 'Личный кабинет'")
     public void testLoginPersonalAccount() {
-        loginPage.loginViaPersonalAccount(UserApiClient.TEST_EMAIL, UserApiClient.TEST_PASSWORD);
-        assertTrue(loginPage.isLoggedIn());
+        loginPage.clickPersonalAccountButton();
+        loginPage.login("test@example.com", "123456");
+        Assert.assertTrue("Профиль не отобразился", loginPage.isProfileVisible());
     }
 }

@@ -18,7 +18,7 @@ public class ConstructorTests {
 
     @Before
     public void setUp() {
-        driver = DriverFactory.create();
+        driver = utils.DriverFactory.create();
         constructorPage = new ConstructorPage(driver);
         driver.get("https://stellarburgers.education-services.ru/");
     }

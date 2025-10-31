@@ -32,14 +32,14 @@
             <version>5.5.0</version>
         </dependency>
 
-        <!-- Jackson (для сериализации) -->
+        <!-- Jackson -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>2.18.0</version>
         </dependency>
 
-        <!-- Gson (оставлено) -->
+        <!-- Gson -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
@@ -50,7 +50,7 @@
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
-            <version>4.14.0</version>
+            <version>4.25.0</version>
         </dependency>
 
         <!-- WebDriverManager -->
@@ -65,22 +65,19 @@
             <groupId>io.qameta.allure</groupId>
             <artifactId>allure-rest-assured</artifactId>
             <version>${allure.version}</version>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>io.qameta.allure</groupId>
             <artifactId>allure-junit4</artifactId>
             <version>${allure.version}</version>
-            <scope>test</scope>
         </dependency>
 
-        <!-- AspectJ needed by Allure (test weaving) -->
+        <!-- AspectJ (для Allure) -->
         <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjweaver</artifactId>
             <version>${aspectj.version}</version>
-            <scope>test</scope>
         </dependency>
 
         <!-- Faker -->
@@ -93,7 +90,7 @@
 
     <build>
         <plugins>
-            <!-- Compiler -->
+            <!-- Компилятор -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -104,25 +101,35 @@
                 </configuration>
             </plugin>
 
-            <!-- Surefire (JUnit4) -->
+            <!-- Запуск тестов JUnit4 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.0.0-M9</version>
                 <configuration>
                     <useFile>false</useFile>
+                    <!-- путь для allure-results -->
                     <systemPropertyVariables>
                         <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
                     </systemPropertyVariables>
+
+                    <!-- регистрация слушателя Allure -->
+                    <properties>
+                        <property>
+                            <name>listener</name>
+                            <value>io.qameta.allure.junit4.AllureJunit4</value>
+                        </property>
+                    </properties>
                 </configuration>
             </plugin>
 
-            <!-- Allure plugin -->
+            <!-- Плагин Allure -->
             <plugin>
                 <groupId>io.qameta.allure</groupId>
                 <artifactId>allure-maven</artifactId>
-                <version>2.12.0</version>
+                <version>2.16.1</version>
             </plugin>
         </plugins>
     </build>
+
 </project>

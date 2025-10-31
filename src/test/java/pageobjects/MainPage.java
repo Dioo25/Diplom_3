@@ -1,62 +1,41 @@
-package pages;
+package pageobjects;
 
 import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.time.Duration;
 
 public class MainPage {
 
     private final WebDriver driver;
+    private final WebDriverWait wait;
 
-    private final By loginButton = By.xpath("//button[text()='Войти в аккаунт' or contains(.,'Войти в аккаунт')]");
-    private final By personalAccount = By.xpath("//a[contains(@href,'account') or contains(text(),'Личный кабинет')]");
-    private final By registerFormLoginLink = By.xpath("//a[contains(text(),'Войти')]");
-    private final By restoreFormLoginLink = By.xpath("//a[contains(text(),'Войти')]");
-    private final By bunsTab = By.xpath("//div[contains(text(),'Булки')]");
-    private final By saucesTab = By.xpath("//div[contains(text(),'Соусы')]");
-    private final By fillingsTab = By.xpath("//div[contains(text(),'Начинки')]");
-    private final By activeTab = By.xpath("//div[contains(@class,'tab_tab_type_current') or contains(@class,'tab_tab_type_current__')]|//div[contains(@class,'tab_tab_type_current')]/..");
+    // селектор кнопки "Войти в аккаунт" на главной (если другая — замени xpath)
+    private final By loginButton = By.xpath("//button[contains(text(),'Войти в аккаунт') or contains(.,'Войти в аккаунт')]");
+
+    // селектор Личного кабинета (в шапке)
+    private final By personalAccountButton = By.xpath("//p[contains(text(),'Личный кабинет') or contains(.,'Личный Кабинет') or //a[contains(@href,'/profile')]]");
 
     public MainPage(WebDriver driver) {
         this.driver = driver;
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(12));
     }
 
     @Step("Открыть главную")
     public void open() {
-        driver.get("https://stellarburgers.education-services.ru");
+        driver.get("https://stellarburgers.education-services.ru/");
     }
 
-    @Step("Кликнуть 'Войти в аккаунт' на главной")
-    public void clickLoginFromMain() {
-        driver.findElement(loginButton).click();
+    @Step("Клик по кнопке 'Войти в аккаунт' на главной")
+    public void clickLoginButton() {
+        wait.until(ExpectedConditions.elementToBeClickable(loginButton)).click();
     }
 
-    @Step("Кликнуть 'Личный кабинет'")
+    @Step("Клик по 'Личный кабинет' (шапка)")
     public void clickPersonalAccount() {
-        driver.findElement(personalAccount).click();
-    }
-
-    @Step("Кликнуть вкладку Булки")
-    public void clickBuns() {
-        driver.findElement(bunsTab).click();
-    }
-
-    @Step("Кликнуть вкладку Соусы")
-    public void clickSauces() {
-        driver.findElement(saucesTab).click();
-    }
-
-    @Step("Кликнуть вкладку Начинки")
-    public void clickFillings() {
-        driver.findElement(fillingsTab).click();
-    }
-
-    @Step("Получить активную вкладку")
-    public String getActiveTabText() {
-        try {
-            return driver.findElement(activeTab).getText();
-        } catch (Exception e) {
-            return "";
-        }
+        wait.until(ExpectedConditions.elementToBeClickable(personalAccountButton)).click();
     }
 }

@@ -1,103 +1,96 @@
-package api.user;
+package api;
 
+import io.qameta.allure.Step;
 import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
 import java.util.UUID;
 
-import static io.restassured.RestAssured.given;
-
 public class UserApiClient {
 
-    // Рабочий стенд (строго тот, который ты указала)
-    private static final String BASE_URL = "https://stellarburgers.education-services.ru";
-
-    // Константы, которые тесты часто используют (если хочешь — измени)
-    public static final String TEST_EMAIL = "test_user_autotest@mail.test";
-    public static final String TEST_PASSWORD = "123456";
-    public static final String TEST_NAME = "AutoTestUser";
-
     static {
-        RestAssured.baseURI = BASE_URL;
+        // Базовый URL задаём один раз для всего клиента
+        RestAssured.baseURI = "https://stellarburgers.education-services.ru";
     }
 
-    // Утилита для генерации случайного email
+    @Step("Генерация рандомного email")
     public static String randomEmail() {
-        return "user_" + UUID.randomUUID().toString().substring(0, 8) + "@test.mail";
+        return "user_" + UUID.randomUUID().toString().substring(0, 8) + "@test.ru";
     }
 
-    // Создать пользователя по email/password/name
-    public Response createUser(String email, String password, String name) {
-        UserPayload payload = new UserPayload(email, password, name);
-        return given()
-                .header("Content-Type", "application/json")
-                .body(payload)
-                .when()
-                .post("/api/auth/register");
+    @Step("Создать пользователя: {user.email}")
+    public Response createUser(User user) {
+        return RestAssured.given()
+                .contentType(ContentType.JSON)
+                .body(user)
+                .post("/api/auth/register")
+                .andReturn();
     }
 
-    // Перегрузка — принять payload объект
-    public Response createUser(UserPayload payload) {
-        return given()
-                .header("Content-Type", "application/json")
-                .body(payload)
-                .when()
-                .post("/api/auth/register");
+    @Step("Вход пользователя: {user.email}")
+    public Response loginUser(User user) {
+        return RestAssured.given()
+                .contentType(ContentType.JSON)
+                .body(user)
+                .post("/api/auth/login")
+                .andReturn();
     }
 
-    // Логин — вернуть Response
-    public Response loginRaw(String email, String password) {
-        LoginPayload payload = new LoginPayload(email, password);
-        return given()
-                .header("Content-Type", "application/json")
-                .body(payload)
-                .when()
-                .post("/api/auth/login");
-    }
-
-    // Логин и получение токена (или null)
-    public String loginAndGetToken(String email, String password) {
-        Response r = loginRaw(email, password);
-        if (r != null && r.statusCode() == 200) {
-            return r.then().extract().path("accessToken");
+    @Step("Удалить пользователя по accessToken")
+    public Response deleteUser(String accessToken) {
+        if (accessToken == null || accessToken.isBlank()) {
+            throw new IllegalArgumentException("accessToken required for deleteUser");
         }
-        return null;
+
+        // Если токен пришёл без префикса "Bearer ", добавим.
+        String headerValue = accessToken.startsWith("Bearer ") ? accessToken : "Bearer " + accessToken;
+
+        return RestAssured.given()
+                .header("Authorization", headerValue)
+                .delete("/api/auth/user")
+                .andReturn();
     }
 
-    // Удаление пользователя по токену (возвращает Response)
-    public Response deleteUser(String token) {
-        if (token == null) return null;
-        return given()
-                .header("Content-Type", "application/json")
-                .header("Authorization", token)
-                .when()
-                .delete("/api/auth/user");
-    }
-
-    // --- Вспомогательные POJO для сериализации
-    public static class UserPayload {
-        public String email;
-        public String password;
-        public String name;
-
-        public UserPayload() {}
-
-        public UserPayload(String email, String password, String name) {
-            this.email = email;
-            this.password = password;
-            this.name = name;
+    /**
+     * Удобный метод: удаляет пользователя по объекту User.
+     * Логинится, получает accessToken и вызывает удаление.
+     */
+    @Step("Удалить пользователя: {user.email}")
+    public Response deleteUser(User user) {
+        if (user == null) {
+            throw new IllegalArgumentException("User must not be null for deleteUser(User)");
         }
-    }
 
-    public static class LoginPayload {
-        public String email;
-        public String password;
+        // Попытка залогиниться, чтобы получить токен
+        Response loginResponse = loginUser(user);
 
-        public LoginPayload() {}
-
-        public LoginPayload(String email, String password) {
-            this.email = email;
-            this.password = password;
+        // Ожидаем успешный логин (будет ресурс теста контролировать проверками статуса)
+        if (loginResponse == null || loginResponse.getStatusCode() != 200) {
+            // Если логин не удался — пытаемся извлечь токен всё равно (на случай нестандартного ответа),
+            // но логируем/бросаем исключение, чтобы тесты не молча падали.
+            throw new IllegalStateException("Не удалось получить accessToken: логин вернул код " +
+                    (loginResponse == null ? "null" : loginResponse.getStatusCode()));
         }
+
+        // Попробуем извлечь поле accessToken из тела ответа
+        String rawToken = null;
+        try {
+            rawToken = loginResponse.jsonPath().getString("accessToken");
+        } catch (Exception ignore) {
+        }
+
+        if (rawToken == null || rawToken.isBlank()) {
+            throw new IllegalStateException("accessToken не найден в ответе при логине пользователя " + user.getEmail());
+        }
+
+        // Иногда API может вернуть accessToken со словом "Bearer " в начале — нормализуем.
+        String tokenForHeader = rawToken.startsWith("Bearer ") ? rawToken : "Bearer " + rawToken;
+
+        // Вызов реального удаления
+        return RestAssured.given()
+                .header("Authorization", tokenForHeader)
+                .delete("/api/auth/user")
+                .andReturn();
     }
 }

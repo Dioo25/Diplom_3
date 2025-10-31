@@ -5,7 +5,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.openqa.selenium.WebDriver;
-import ui.DriverFactory;
+import utils.DriverFactory;
 
 public abstract class BaseUiTest {
 
@@ -17,11 +17,14 @@ public abstract class BaseUiTest {
     @Before
     public void setUp() {
         driver = DriverFactory.create();
-        driver.manage().window().maximize();
     }
 
     @After
     public void tearDown() {
-        if (driver != null) driver.quit();
+        if (driver != null) {
+            try {
+                driver.quit();
+            } catch (Exception ignored) { }
+        }
     }
 }
